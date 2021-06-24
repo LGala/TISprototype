@@ -16,15 +16,9 @@ public final class LoginAborted extends OperationSchema {
 
 	@Override
 	protected void predicates() throws Failure {
-		System.out.println("Starting Login Aborting Operation...");
-
 		add(adminTokenPresence().eq(new LVar("", "absent")));
 
 		add(enclaveStatus().eq(new LVar("", "gotAdminToken")));
-
-		solve();
-
-		System.out.println("Login Correctly Aborted...");
 	}
 
 	private LVar adminTokenPresence() { return loginContext.enclaveContext.idStation.adminToken.adminTokenPresence; }

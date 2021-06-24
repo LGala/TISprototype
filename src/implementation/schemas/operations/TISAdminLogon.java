@@ -1,40 +1,52 @@
 package implementation.schemas.operations;
 
 import implementation.schemas.states.*;
+import libraries.jsetl.BoolLVar;
 import libraries.jsetl.Constraint;
 import libraries.jsetl.exception.Failure;
 
 public final class TISAdminLogon {
-	String enclaveStatus = "enclaveQuiescent";
-	String status = "";
-	String adminTokenPresence = "present";
-	String rolePresent = "nil";
-
-	Internal internal = new Internal(enclaveStatus, status);
-	AdminToken adminToken = new AdminToken(adminTokenPresence, "0001");
-	IDStation idStation = new IDStation(internal, adminToken);
-	EnclaveContext enclaveContext = new EnclaveContext(idStation);
-	LoginContext loginContext = new LoginContext(enclaveContext);
-
-	Admin admin = new Admin(rolePresent);
-
-	private Constraint TISReadAdminToken() throws Failure {
-		return new ReadAdminToken(loginContext, admin);
+	private void TISReadAdminToken(LoginContext loginContext, Admin admin) throws Failure {
+		if (new ReadAdminToken(loginContext, admin).check())
+			System.out.println("i'm reading the token");
 	}
 
-	private Constraint TISValidateAdminToken() throws Failure {
-		return new ValidateAdminTokenOK(loginContext).or(new ValidateAdminTokenFail(loginContext).or(new LoginAborted(loginContext)));
+	private void TISValidateAdminToken(LoginContext loginContext) throws Failure {
+		if (new ValidateAdminTokenOK(loginContext).check())
+			System.out.println("the token is correct");
+		else if (new ValidateAdminTokenFail(loginContext).check())
+			System.out.println("the token is not valid");
+		else if (new LoginAborted(loginContext).check())
+			System.out.println("login Aborted");
 	}
 
-	private Constraint TISCompleteFailedAdminLogon() throws Failure {
-		return new FailedAdminTokenRemoved(loginContext, admin).or(new WaitingAdminTokenRemoval(loginContext));
+	private void TISCompleteFailedAdminLogon(LoginContext loginContext, Admin admin) throws Failure {
+		if (new FailedAdminTokenRemoved(loginContext, admin).check())
+			System.out.println("the token was removed in a bad way");
+		else if (new WaitingAdminTokenRemoval(loginContext).check())
+			System.out.println("i'm waiting for you to remove the token");
 	}
 
-	public TISAdminLogon() throws Failure {
-		TISReadAdminToken().or(TISValidateAdminToken().or(TISCompleteFailedAdminLogon())).solve();
+	public TISAdminLogon(LoginContext loginContext, Admin admin) throws Failure {
+		TISReadAdminToken(loginContext, admin);
+		TISValidateAdminToken(loginContext);
+		TISCompleteFailedAdminLogon(loginContext, admin);
 	}
 
 	public static void main(String[] args) throws Failure {
-		new TISAdminLogon();
+		String enclaveStatus = "enclaveQuiescent";
+		String status = "";
+		String adminTokenPresence = "present";
+		String rolePresent = "nil";
+
+		Internal internal = new Internal(enclaveStatus, status);
+		AdminToken adminToken = new AdminToken(adminTokenPresence, "0000");
+		IDStation idStation = new IDStation(internal, adminToken);
+		EnclaveContext enclaveContext = new EnclaveContext(idStation);
+		LoginContext loginContext = new LoginContext(enclaveContext);
+
+		Admin admin = new Admin(rolePresent);
+
+		new TISAdminLogon(loginContext, admin);
 	}
 }

@@ -1,7 +1,7 @@
 package implementation.schemas.operations;
 
-import implementation.schemas.states.Admin;
 import implementation.schemas.states.LoginContext;
+import libraries.jsetl.Constraint;
 import libraries.jsetl.LVar;
 import libraries.jsetl.exception.Failure;
 import libraries.z.schemas.OperationSchema;
@@ -17,16 +17,10 @@ public final class ValidateAdminTokenOK extends OperationSchema {
 
 	@Override
 	protected void predicates() throws Failure {
-		System.out.println("Validating Admin Token...");
-
 		add(enclaveStatus().eq(new LVar("", "gotAdminToken")));
 		add(adminTokenPresence().eq(new LVar("", "present")));
-		add(new AdminTokenOK(currentAdminToken()));
+		add(AdminTokenOK(currentAdminToken()));
 		add(enclaveStatus_().eq(new LVar("", "enclaveQuiescent")));
-
-		solve();
-
-		System.out.println("Admin Token Correctly Validated...");
 	}
 
 	private LVar adminTokenPresence() { return loginContext.enclaveContext.idStation.adminToken.adminTokenPresence; }
@@ -37,18 +31,9 @@ public final class ValidateAdminTokenOK extends OperationSchema {
 
 	private LVar currentAdminToken() { return loginContext.enclaveContext.idStation.adminToken.currentAdminToken; }
 
-	private static class AdminTokenOK extends OperationSchema {
-		private LVar currentAdminToken;
+	private Constraint AdminTokenOK(LVar currentAdminToken) {
+		var rightToken = new LVar("", "0001");
 
-		private LVar rightCurrentAdminToken = new LVar("", "0001");
-
-		public AdminTokenOK(LVar currentAdminToken) {
-			this.currentAdminToken = currentAdminToken;
-		}
-
-		@Override
-		protected void predicates() throws Failure {
-			add(currentAdminToken.eq(rightCurrentAdminToken));
-		}
+		return currentAdminToken.eq(rightToken);
 	}
 }

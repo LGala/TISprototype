@@ -21,16 +21,10 @@ public final class FailedAdminTokenRemoved extends OperationSchema {
 
 	@Override
 	protected void predicates() throws Failure {
-		System.out.println("Removing Admin Token...");
-
 		add(enclaveStatus().eq(new LVar("", "waitingRemoveAdminTokenFail")));
 		add(adminTokenPresence().eq(new LVar("", "absent")));
 
 		add(enclaveStatus_().eq(new LVar("", "enclaveQuiescent")));
-
-		solve();
-
-		System.out.println("Removing Admin Token Operation Has Failed...");
 	}
 
 	private LVar adminTokenPresence() { return loginContext.enclaveContext.idStation.adminToken.adminTokenPresence; }
@@ -39,5 +33,5 @@ public final class FailedAdminTokenRemoved extends OperationSchema {
 
 	private LVar enclaveStatus_() { return (loginContext.enclaveContext.idStation.internal.enclaveStatus = new LVar("")); }
 
-	private LVar status() { return new LVar("", loginContext.enclaveContext.idStation.internal.status); }
+	private LVar status() { return loginContext.enclaveContext.idStation.internal.status; }
 }
